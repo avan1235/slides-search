@@ -5,7 +5,10 @@ import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.TokenStream
 import org.apache.lucene.analysis.Tokenizer
 import org.apache.lucene.analysis.core.LowerCaseFilter
+import org.apache.lucene.analysis.en.EnglishPossessiveFilter
 import org.apache.lucene.analysis.miscellaneous.ASCIIFoldingFilter
+import org.apache.lucene.analysis.miscellaneous.LengthFilter
+import org.apache.lucene.analysis.miscellaneous.TrimFilter
 import org.apache.lucene.analysis.pattern.PatternReplaceFilter
 import org.apache.lucene.analysis.standard.StandardTokenizer
 import org.apache.lucene.document.Document
@@ -22,15 +25,21 @@ import java.util.regex.Pattern
 
 class LuceneSearchEngine : SlideSearchEngine {
 
-    // Pipeline: tokenize → strip punctuation → lowercase → fold diacritics
+    // Pipeline: tokenize → strip possessives → strip punctuation → trim → lowercase → fold diacritics → drop short tokens
     private val analyzer: Analyzer = object : Analyzer() {
         override fun createComponents(fieldName: String): TokenStreamComponents {
             val tokenizer: Tokenizer = StandardTokenizer()
             val stream = tokenizer
+                // EnglishPossessiveFilter strips trailing 's (e.g. "Kotlin's" → "Kotlin") before punctuation removal
+                .let { EnglishPossessiveFilter(it) }
                 .let { PatternReplaceFilter(it, Pattern.compile("[^\\p{L}\\p{N}\\s]"), "", true) }
+                // TrimFilter cleans up any leading/trailing whitespace left on tokens by PatternReplaceFilter
+                .let { TrimFilter(it) }
                 .let { LowerCaseFilter(it) }
                 // ASCIIFoldingFilter maps all Polish diacritics: ą→a, ę→e, ó→o, ś→s, ź/ż→z, ć→c, ń→n, ł→l
                 .let { ASCIIFoldingFilter(it) }
+                // LengthFilter drops single-character tokens that produce excessive fuzzy-match noise
+                .let { LengthFilter(it, 2, Int.MAX_VALUE) }
             return TokenStreamComponents(tokenizer, stream)
         }
     }
