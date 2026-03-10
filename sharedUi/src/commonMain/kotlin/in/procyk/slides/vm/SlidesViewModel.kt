@@ -164,13 +164,21 @@ class SlidesViewModel(
         searchState.update { Idle }
     }
 
-    private fun navigateNext() {
+    fun navigateNext() {
         val count = slides.value.size
         if (count == 0) return
         slideIndex.update { (it + 1).coerceAtMost(count - 1) }
     }
 
-    private fun navigatePrev() {
+    fun navigatePrev() {
         slideIndex.update { (it - 1).coerceAtLeast(0) }
+    }
+
+    fun navigateFirst() {
+        slideIndex.update { 0 }
+    }
+
+    fun navigateLast() {
+        slideIndex.update { slides.value.size - 1 }
     }
 }
