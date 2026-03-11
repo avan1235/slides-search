@@ -37,6 +37,11 @@ Presentations are loaded from JSON files produced by the bundled `slidesParser` 
 - Desktop (Windows, macOS, Linux via JVM)
 - Web (via WebAssembly and JavaScript)
 
+Please note that for running unsigned version of macOS application, you need to temporarily disable Gatekeeper, so executing command
+```shell
+sudo xattr -dr com.apple.quarantine  /Applications/SlidesSearch.app
+```
+
 ## Project Structure
 
 ```
