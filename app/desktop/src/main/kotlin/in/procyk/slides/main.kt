@@ -110,7 +110,7 @@ private fun loadPresentation(path: String?): Presentation {
             ?: takeExistingFile("./presentation.json")
             ?: takeExistingFile("../presentation.json")
     if (file == null) {
-        return Presentation.SAMPLE
+        return Presentation.EMPTY
     }
     return file.inputStream().use(::loadJsonPresentation)
 }
@@ -119,7 +119,7 @@ private fun loadPresentation(path: String?): Presentation {
 private fun loadJsonPresentation(input: InputStream): Presentation = try {
     ReadPresentationJson.decodeFromStream<Presentation>(input)
 } catch (_: Exception) {
-    Presentation.SAMPLE
+    Presentation.EMPTY
 }
 
 private fun FrameWindowScope.openPresentation(

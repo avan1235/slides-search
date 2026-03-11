@@ -36,7 +36,7 @@ sealed class SearchState {
 
 class SlidesViewModel(
     private val searchEngine: SlideSearchEngine,
-    private val presentation: Presentation = Presentation.SAMPLE,
+    private val presentation: Presentation = Presentation.EMPTY,
 ) : ViewModel() {
 
     val slides: StateFlow<List<Slide>>
