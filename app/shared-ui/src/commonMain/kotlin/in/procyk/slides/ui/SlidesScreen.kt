@@ -22,6 +22,7 @@ import `in`.procyk.slides.vm.SlidesViewModel
 fun SlidesScreen(vm: SlidesViewModel) {
     val slides by vm.slides.collectAsState()
     val slideIndex by vm.slideIndex.collectAsState()
+    val fontScale by vm.fontScale.collectAsState()
     val currentSlide = slides.getOrNull(slideIndex)
 
     MaterialTheme {
@@ -50,8 +51,8 @@ fun SlidesScreen(vm: SlidesViewModel) {
                     }
                     Text(
                         text = currentSlide.content,
-                        fontSize = FONT_SIZE_SP.sp,
-                        lineHeight = (1.2 * FONT_SIZE_SP).sp,
+                        fontSize = (fontScale * FONT_SIZE_SP).sp,
+                        lineHeight = (fontScale * 1.2 * FONT_SIZE_SP).sp,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

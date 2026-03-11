@@ -39,6 +39,9 @@ class SlidesViewModel(
     private val presentation: Presentation = Presentation.EMPTY,
 ) : ViewModel() {
 
+    val fontScale: StateFlow<Float>
+        field = MutableStateFlow(1f)
+
     val slides: StateFlow<List<Slide>>
         field = MutableStateFlow(presentation.slides)
 
@@ -61,6 +64,14 @@ class SlidesViewModel(
         if (keyEvent.type != KeyUp) return false
 
         return when (keyEvent.key) {
+            Key.Plus, Key.Equals -> {
+                increaseFontSize()
+                true
+            }
+            Key.Minus -> {
+                decreaseFontSize()
+                true
+            }
             Key.Escape -> {
                 clearSearch()
                 true
@@ -180,5 +191,13 @@ class SlidesViewModel(
 
     fun navigateLast() {
         slideIndex.update { slides.value.size - 1 }
+    }
+
+    private fun increaseFontSize() {
+        fontScale.update { it + 0.1f }
+    }
+
+    private fun decreaseFontSize() {
+        fontScale.update { (it - 0.1f).coerceAtLeast(0.1f) }
     }
 }

@@ -38,7 +38,7 @@ import `in`.procyk.slides.vm.SearchState
 import `in`.procyk.slides.vm.SlidesViewModel
 
 private const val NEIGHBOR_COUNT = 5
-private const val SLIDE_ASPECT = 3f / 4f
+private const val SLIDE_ASPECT = 9f / 16f
 private const val GAP_DP = 8
 private const val OUTER_PADDING_DP = 16
 
@@ -73,6 +73,7 @@ fun ControlScreen(vm: SlidesViewModel) {
             val previewTitleFontSize: TextUnit = (PREVIEW_TITLE_FONT_SP * scale).sp
             val currentScale = currentWidth.value / PREVIEW_FONT_REF_WIDTH_DP
             val fontSize = (PREVIEW_TITLE_FONT_SP * currentScale).sp
+            val fontScale by vm.fontScale.collectAsState()
 
             Column(
                 modifier = Modifier.align(Alignment.Center).wrapContentSize()
@@ -99,7 +100,7 @@ fun ControlScreen(vm: SlidesViewModel) {
                     isCurrentSlide = true,
                     width = currentWidth,
                     height = currentHeight,
-                    fontSize = fontSize,
+                    fontSize = fontSize * fontScale,
                     onSlideClick = vm::navigateTo,
                 )
 
