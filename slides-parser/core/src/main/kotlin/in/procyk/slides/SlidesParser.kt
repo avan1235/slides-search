@@ -2,31 +2,15 @@ package `in`.procyk.slides
 
 import `in`.procyk.slides.model.Presentation
 import `in`.procyk.slides.model.Slide
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.apache.poi.openxml4j.util.ZipSecureFile
 import org.apache.poi.xslf.usermodel.XMLSlideShow
 import org.apache.poi.xslf.usermodel.XSLFTextShape
-import java.io.File
+import java.io.InputStream
 
-fun main(args: Array<String>) {
-    val inputPath = args.getOrNull(0) ?: error("Usage: slidesParser <input.pptx> [presentation.json]")
-    val outputPath = args.getOrNull(1) ?: "presentation.json"
-
-    val inputFile = File(inputPath)
-    require(inputFile.exists()) { "Input file not found: $inputPath" }
-
-    val presentation = parsePptx(inputFile)
-    val json = Json { prettyPrint = true }
-    File(outputPath).writeText(json.encodeToString(presentation), Charsets.UTF_8)
-    println("Parsed ${presentation.slides.size} slides -> $outputPath")
-}
-
-private fun parsePptx(file: File): Presentation {
+fun parsePptx(fis: InputStream): Presentation {
     ZipSecureFile.setMaxFileCount(100_000)
-    file.inputStream().use { fis ->
-        val slideShow = XMLSlideShow(fis)
-        val slides = slideShow.slides.map { xslfSlide ->
+    val slides = XMLSlideShow(fis).use { slideShow ->
+        slideShow.slides.map { xslfSlide ->
             val titleShape = xslfSlide.shapes
                 .filterIsInstance<XSLFTextShape>()
                 .firstOrNull { it.shapeName?.contains("title", ignoreCase = true) == true }
@@ -59,11 +43,10 @@ private fun parsePptx(file: File): Presentation {
                 ?.trim()
                 ?.takeIf { it.isNotBlank() }
 
-            Slide(content = content, title = title, notes = rawNotes?.let { cleanContent(it) })
+            Slide(content = content, title = title, notes = rawNotes?.let(::cleanContent))
         }
-        slideShow.close()
-        return Presentation(slides = slides)
     }
+    return Presentation(slides = slides)
 }
 
 /**

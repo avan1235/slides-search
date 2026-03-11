@@ -42,27 +42,6 @@ Please note that for running unsigned version of macOS application, you need to 
 sudo xattr -dr com.apple.quarantine  /Applications/SlidesSearch.app
 ```
 
-## Project Structure
-
-```
-slides-search
-├─ desktopApp       # JVM desktop application (dual-screen presenter view, Lucene search)
-│  └─ src
-│     └─ jvmMain
-├─ webApp           # Browser application (JS + WASM targets, naive search)
-│  └─ src
-│     └─ webMain
-├─ sharedUi         # Compose Multiplatform UI shared by desktop and web
-│  └─ src
-│     └─ commonMain # App composables, SlidesViewModel, search state machine
-├─ sharedLogic      # Pure Kotlin logic shared across all targets
-│  └─ src
-│     └─ commonMain # Data models (Slide, Presentation), SlideSearchEngine interface, NaiveSearchEngine
-└─ slidesParser     # JVM CLI utility — converts .pptx files to JSON via Apache POI
-   └─ src
-      └─ main
-```
-
 ## 📄 License
 This project is licensed under the MIT License - see the LICENSE file for details.
 

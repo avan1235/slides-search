@@ -53,7 +53,7 @@ jobs:
         run: |
           export GRADLE_USER_HOME=$(pwd)/.gradle
           chmod +x ./gradlew
-          ./gradlew desktopApp:packageDistributionForCurrentOS
+          ./gradlew app:desktop:packageDistributionForCurrentOS
         shell: bash
         env:
           VERSION: ${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}
@@ -63,7 +63,7 @@ jobs:
         if: runner.os == 'Linux'
         with:
           name: SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.deb
-          path: desktopApp/build/compose/binaries/main/deb/slidessearch_${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}_amd64.deb
+          path: app/desktop/build/compose/binaries/main/deb/slidessearch_${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}_amd64.deb
 
       - name: Upload deb artifact file to release
         uses: actions/upload-release-asset@v1
@@ -72,7 +72,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./desktopApp/build/compose/binaries/main/deb/slidessearch_${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}_amd64.deb
+          asset_path: ./app/desktop/build/compose/binaries/main/deb/slidessearch_${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}_amd64.deb
           asset_name: SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.deb
           asset_content_type: application/x-deb
 
@@ -81,7 +81,7 @@ jobs:
         if: runner.os == 'Windows'
         with:
           name: SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.msi
-          path: desktopApp/build/compose/binaries/main/msi/SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.msi
+          path: app/desktop/build/compose/binaries/main/msi/SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.msi
 
       - name: Upload msi installer file to release
         uses: actions/upload-release-asset@v1
@@ -90,7 +90,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./desktopApp/build/compose/binaries/main/msi/SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.msi
+          asset_path: ./app/desktop/build/compose/binaries/main/msi/SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.msi
           asset_name: SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.msi
           asset_content_type: application/x-ms-dos-executable
 
@@ -99,7 +99,7 @@ jobs:
         if: runner.os == 'macOS'
         with:
           name: SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.dmg
-          path: desktopApp/build/compose/binaries/main/dmg/SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.dmg
+          path: app/desktop/build/compose/binaries/main/dmg/SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.dmg
 
       - name: Upload dmg image file to release
         uses: actions/upload-release-asset@v1
@@ -108,6 +108,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./desktopApp/build/compose/binaries/main/dmg/SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.dmg
+          asset_path: ./app/desktop/build/compose/binaries/main/dmg/SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.dmg
           asset_name: SlidesSearch-${{ env.MAJOR }}.${{ env.MINOR }}.${{ env.PATCH }}.dmg
           asset_content_type: application/octet-stream

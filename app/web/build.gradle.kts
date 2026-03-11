@@ -24,7 +24,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.sharedUi)
+            implementation(projects.app.sharedUi)
 
             implementation(libs.compose.ui)
         }

@@ -14,7 +14,7 @@ kotlin {
     }
 
     dependencies {
-        implementation(projects.sharedUi)
+        implementation(projects.app.sharedUi)
 
         implementation(compose.desktop.currentOs)
         implementation(libs.kotlinx.coroutinesSwing)

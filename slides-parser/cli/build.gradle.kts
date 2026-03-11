@@ -14,10 +14,8 @@ kotlin {
     }
 
     dependencies {
-        implementation(projects.sharedLogic)
+        implementation(projects.slidesParser.core)
 
-        implementation(libs.kotlinx.coroutinesSwing)
         implementation(libs.kotlinx.serialization.json)
-        implementation(libs.apache.poi.ooxml)
     }
 }

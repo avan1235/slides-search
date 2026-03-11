@@ -28,7 +28,7 @@ kotlin {
     
     sourceSets {
         commonMain.dependencies {
-            api(projects.sharedLogic)
+            api(projects.core)
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

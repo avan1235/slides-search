@@ -32,8 +32,9 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-include(":desktopApp")
-include(":sharedUi")
-include(":sharedLogic")
-include(":webApp")
-include(":slidesParser")
+include(":app:shared-ui")
+include(":app:desktop")
+include(":app:web")
+include(":core")
+include(":slides-parser:core")
+include(":slides-parser:cli")
