@@ -37,7 +37,7 @@ fun main(args: Array<String>) {
 
     val control = screens.firstOrNull() ?: error("no screen to control slides")
     val slides = screens.drop(1).firstOrNull {
-        it.isFullScreenSupported && it.defaultConfiguration.bounds.run { width > height }
+        it.isFullScreenSupported
     } ?: error("no screen to display slides on")
 
     val controlPosition = control.windowPosition
