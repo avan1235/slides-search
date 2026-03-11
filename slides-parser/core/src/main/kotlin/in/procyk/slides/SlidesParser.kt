@@ -7,7 +7,7 @@ import org.apache.poi.xslf.usermodel.XMLSlideShow
 import org.apache.poi.xslf.usermodel.XSLFTextShape
 import java.io.InputStream
 
-fun parsePptx(fis: InputStream): Presentation {
+fun parsePptxPresentation(fis: InputStream): Presentation {
     ZipSecureFile.setMaxFileCount(100_000)
     val slides = XMLSlideShow(fis).use { slideShow ->
         slideShow.slides.map { xslfSlide ->

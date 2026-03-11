@@ -19,4 +19,4 @@ fun main(args: Array<String>) {
 }
 
 private fun parsePptx(file: File): Presentation =
-    file.inputStream().use { parsePptx(it) }
+    file.inputStream().use { parsePptxPresentation(it) }

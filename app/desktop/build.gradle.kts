@@ -15,6 +15,7 @@ kotlin {
 
     dependencies {
         implementation(projects.app.sharedUi)
+        implementation(projects.slidesParser.core)
 
         implementation(compose.desktop.currentOs)
         implementation(libs.kotlinx.coroutinesSwing)

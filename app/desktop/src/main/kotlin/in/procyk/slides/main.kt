@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
@@ -19,14 +20,14 @@ import `in`.procyk.slides.ui.SlidesScreen
 import `in`.procyk.slides.vm.SlidesViewModel
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
 import java.awt.FileDialog
 import java.awt.GraphicsDevice
 import java.awt.GraphicsEnvironment
 import java.io.File
 import java.io.FilenameFilter
+import java.io.InputStream
 import java.util.Locale
-import javax.swing.JFileChooser
-import javax.swing.filechooser.FileNameExtensionFilter
 
 
 fun main(args: Array<String>) {
@@ -62,25 +63,16 @@ fun main(args: Array<String>) {
         ) {
             MenuBar {
                 Menu("File") {
-                    Item("Open", onClick = {
-                        val dialog =
-                            FileDialog(window, "Select presentation JSON file", FileDialog.LOAD)
-                        dialog.filenameFilter = FilenameFilter { _: File?, name: String? ->
-                            name?.lowercase(Locale.getDefault())?.endsWith(".json") == true
-                        }
-                        dialog.isVisible = true
-
-                        val fileName = dialog.file
-                        val directory = dialog.directory
-
-                        if (fileName != null && directory != null) {
-                            val file = File(directory, fileName)
-                            vm = SlidesViewModel(
-                                searchEngine = LuceneSearchEngine(),
-                                presentation = loadPresentation(file.absolutePath),
-                            )
-                        }
-                    })
+                    Item(
+                        "Open .json Presentation",
+                        onClick = {
+                            openPresentation("json", ::loadJsonPresentation)?.let { vm = it }
+                        })
+                    Item(
+                        "Open .pptx Presentation",
+                        onClick = {
+                            openPresentation("pptx", ::parsePptxPresentation)?.let { vm = it }
+                        })
                 }
                 Menu("Slide") {
                     Item("Next", onClick = { vm.navigateNext() })
@@ -113,25 +105,48 @@ private val ReadPresentationJson = Json {
 }
 
 private fun loadPresentation(path: String?): Presentation {
-    val file = path.let(::takeExistingFile)
-        ?: takeExistingFile("./presentation.json")
-        ?: takeExistingFile("../presentation.json")
+    val file =
+        path.let(::takeExistingFile)
+            ?: takeExistingFile("./presentation.json")
+            ?: takeExistingFile("../presentation.json")
     if (file == null) {
-        println("No presentation JSON, using sample.")
         return Presentation.SAMPLE
     }
-    return try {
-        ReadPresentationJson
-            .decodeFromString<Presentation>(file.readText(Charsets.UTF_8))
-            .also { println("Loaded ${it.slides.size} slides from ${file.absolutePath}") }
-    } catch (e: Exception) {
-        println("Failed to parse input file: ${e.message}. Using sample.")
-        Presentation.SAMPLE
-    }
+    return file.inputStream().use(::loadJsonPresentation)
 }
 
-private fun takeExistingFile(path: String?): File? =
-    path?.let(::File)?.takeIf { it.exists() }
+@OptIn(ExperimentalSerializationApi::class)
+private fun loadJsonPresentation(input: InputStream): Presentation = try {
+    ReadPresentationJson.decodeFromStream<Presentation>(input)
+} catch (_: Exception) {
+    Presentation.SAMPLE
+}
+
+private fun FrameWindowScope.openPresentation(
+    ext: String,
+    load: (InputStream) -> Presentation
+): SlidesViewModel? {
+    val dialog =
+        FileDialog(window, "Select presentation ${ext.uppercase()} file", FileDialog.LOAD).apply {
+            filenameFilter = FilenameFilter { _: File?, name: String? ->
+                name?.lowercase(Locale.getDefault())?.endsWith(".$ext") == true
+            }
+            isVisible = true
+        }
+
+    val fileName = dialog.file
+    val directory = dialog.directory
+
+    return if (fileName != null && directory != null) {
+        val file = File(directory, fileName)
+        SlidesViewModel(
+            searchEngine = LuceneSearchEngine(),
+            presentation = file.inputStream().use(load),
+        )
+    } else null
+}
+
+private fun takeExistingFile(path: String?): File? = path?.let(::File)?.takeIf { it.exists() }
 
 private inline val GraphicsDevice.windowPosition: WindowPosition
     get() = defaultConfiguration.bounds.run {
