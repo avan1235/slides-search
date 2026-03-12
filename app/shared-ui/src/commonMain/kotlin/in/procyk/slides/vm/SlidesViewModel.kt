@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Duration.Companion.seconds
@@ -68,10 +70,12 @@ class SlidesViewModel(
                 increaseFontSize()
                 true
             }
+
             Key.Minus -> {
                 decreaseFontSize()
                 true
             }
+
             Key.Escape -> {
                 clearSearch()
                 true
@@ -193,11 +197,18 @@ class SlidesViewModel(
         slideIndex.update { slides.value.size - 1 }
     }
 
-    private fun increaseFontSize() {
+    fun increaseFontSize() {
         fontScale.update { it + 0.1f }
     }
 
-    private fun decreaseFontSize() {
+    fun decreaseFontSize() {
         fontScale.update { (it - 0.1f).coerceAtLeast(0.1f) }
     }
+
+    fun savePresentation() {
+        val presentation = Json.encodeToString(presentation)
+        savePresentation(presentation)
+    }
 }
+
+internal expect fun savePresentation(json: String)

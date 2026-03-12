@@ -73,6 +73,11 @@ fun main(args: Array<String>) {
                         onClick = {
                             openPresentation("pptx", ::parsePptxPresentation)?.let { vm = it }
                         })
+                    Separator()
+                    Item(
+                        "Save Presentation to .json",
+                        onClick = { vm.savePresentation() }
+                    )
                 }
                 Menu("Slide") {
                     Item("Next", onClick = { vm.navigateNext() })
@@ -80,6 +85,10 @@ fun main(args: Array<String>) {
                     Separator()
                     Item("First", onClick = { vm.navigateFirst() })
                     Item("Last", onClick = { vm.navigateLast() })
+                }
+                Menu("View") {
+                    Item("Increase Font Size", onClick = { vm.increaseFontSize() })
+                    Item("Decrease Font Size", onClick = { vm.decreaseFontSize() })
                 }
             }
             ControlScreen(vm)
