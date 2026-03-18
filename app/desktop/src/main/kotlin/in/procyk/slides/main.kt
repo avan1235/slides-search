@@ -38,7 +38,8 @@ fun main(args: Array<String>) {
     val control = screens.firstOrNull() ?: error("no screen to control slides")
     val slides = screens.drop(1).firstOrNull {
         it.isFullScreenSupported
-    } ?: error("no screen to display slides on")
+    } ?: control
+    val fullscreenSlides = slides !== control
 
     val controlPosition = control.windowPosition
     val slidesPosition = slides.windowPosition
@@ -98,7 +99,9 @@ fun main(args: Array<String>) {
             onCloseRequest = ::exitApplication,
             state = rememberWindowState(
                 position = slidesPosition,
-                placement = WindowPlacement.Fullscreen,
+                placement =
+                    if (fullscreenSlides) WindowPlacement.Fullscreen
+                    else WindowPlacement.Floating,
             ),
             onKeyEvent = { vm.onKeyEvent(it) },
         ) {
