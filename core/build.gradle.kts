@@ -31,5 +31,10 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        jvmMain.dependencies {
+            implementation(libs.lucene.core)
+            implementation(libs.lucene.analysis.common)
+            implementation(libs.lucene.queryparser)
+        }
     }
 }

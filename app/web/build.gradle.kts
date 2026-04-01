@@ -27,6 +27,10 @@ kotlin {
             implementation(projects.app.sharedUi)
 
             implementation(libs.compose.ui)
+
+            implementation(libs.kstore)
+            implementation(libs.kstore.storage)
+            implementation(libs.koin.core)
         }
     }
 }

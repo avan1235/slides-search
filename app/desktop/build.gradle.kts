@@ -24,9 +24,8 @@ kotlin {
         implementation(libs.compose.uiToolingPreview)
         implementation(libs.androidx.lifecycle.viewmodelCompose)
 
-        implementation(libs.lucene.core)
-        implementation(libs.lucene.analysis.common)
-        implementation(libs.lucene.queryparser)
+        implementation(libs.koin.core)
+        implementation(libs.koin.compose.viewmodel)
     }
 }
 

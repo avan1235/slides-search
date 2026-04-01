@@ -15,14 +15,12 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.initializer
 import `in`.procyk.slides.search.NaiveSearchEngine
 import `in`.procyk.slides.vm.SlidesViewModel
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun App() {
-    val factory = viewModelFactory {
-        initializer { SlidesViewModel(searchEngine = NaiveSearchEngine) }
-    }
-    val vm: SlidesViewModel = viewModel(factory = factory)
-
+    val vm = koinViewModel<SlidesViewModel>()
     MaterialTheme {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             if (maxWidth > maxHeight) {

@@ -17,10 +17,16 @@ import `in`.procyk.slides.search.SlideSearchEngine
 import `in`.procyk.slides.vm.SearchState.Idle
 import `in`.procyk.slides.vm.SearchState.Results
 import `in`.procyk.slides.vm.SearchState.Typing
+import io.github.xxfast.kstore.KStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
@@ -38,14 +44,19 @@ sealed class SearchState {
 
 class SlidesViewModel(
     private val searchEngine: SlideSearchEngine,
-    private val presentation: Presentation = Presentation.EMPTY,
+    private val store: KStore<SlidesStore>,
 ) : ViewModel() {
 
     val fontScale: StateFlow<Float>
         field = MutableStateFlow(1f)
 
-    val slides: StateFlow<List<Slide>>
-        field = MutableStateFlow(presentation.slides)
+    private val presentation: StateFlow<Presentation> =
+        store.updates.mapNotNull { it?.presentation }
+            .stateIn(viewModelScope, SharingStarted.Lazily, Presentation.EMPTY)
+
+    val slides: StateFlow<List<Slide>> =
+        presentation.map { it.slides }
+            .stateIn(viewModelScope, SharingStarted.Lazily, Presentation.EMPTY.slides)
 
     val slideIndex: StateFlow<Int>
         field = MutableStateFlow(0)
@@ -206,8 +217,14 @@ class SlidesViewModel(
     }
 
     fun savePresentation() {
-        val presentation = Json.encodeToString(presentation)
+        val presentation = Json.encodeToString(presentation.value)
         savePresentation(presentation)
+    }
+
+    fun loadPresentation(presentation: Presentation) {
+        viewModelScope.launch {
+            store.update { it?.copy(presentation = presentation) }
+        }
     }
 }
 
