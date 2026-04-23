@@ -54,6 +54,7 @@ fun main(args: Array<String>) {
 
     application {
         Window(
+            title = "Control Panel",
             onCloseRequest = ::exitApplication,
             state = rememberWindowState(
                 position = controlPosition,
@@ -102,6 +103,7 @@ fun main(args: Array<String>) {
         }
 
         Window(
+            title = "Slides",
             onCloseRequest = ::exitApplication,
             state = rememberWindowState(
                 position = slidesPosition,
