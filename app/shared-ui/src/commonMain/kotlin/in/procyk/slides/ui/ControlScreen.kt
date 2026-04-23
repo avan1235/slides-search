@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -22,7 +24,10 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -127,7 +132,6 @@ fun ControlScreen(vm: SlidesViewModel) {
                 is SearchState.Typing -> SearchQueryOverlay(
                     query = searchState.query,
                     resultPosition = Typing,
-                    modifier = Modifier.align(Alignment.BottomCenter),
                 )
 
                 is SearchState.Results -> SearchQueryOverlay(
@@ -135,7 +139,6 @@ fun ControlScreen(vm: SlidesViewModel) {
                     resultPosition = searchState.resultIndex?.let {
                         Found(it + 1, searchState.indices.size)
                     } ?: NoResults,
-                    modifier = Modifier.align(Alignment.BottomCenter),
                 )
 
                 is SearchState.Idle -> {}
@@ -227,12 +230,11 @@ private sealed class ResultPosition {
 }
 
 @Composable
-private fun SearchQueryOverlay(
+private fun BoxScope.SearchQueryOverlay(
     query: String,
     resultPosition: ResultPosition,
-    modifier: Modifier,
+    shape: Shape = RoundedCornerShape(8.dp),
 ) {
-
     TextField(
         value = TextFieldValue(buildAnnotatedString {
             withStyle(MaterialTheme.typography.bodyLarge.toSpanStyle()) {
@@ -252,8 +254,18 @@ private fun SearchQueryOverlay(
                 Text(text = it, style = MaterialTheme.typography.bodySmall)
             }
         },
-        modifier = modifier.fillMaxWidth(),
-        colors = TextFieldDefaults.colors().copy(errorTextColor = MaterialTheme.colorScheme.error),
+        modifier = Modifier
+            .shadow(8.dp, shape)
+            .clip(shape)
+            .align(Alignment.Center)
+            .fillMaxWidth(0.8f),
+        colors = TextFieldDefaults.colors().copy(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            errorTextColor = MaterialTheme.colorScheme.error,
+        ),
         isError = resultPosition == NoResults,
+        shape = shape,
     )
 }
