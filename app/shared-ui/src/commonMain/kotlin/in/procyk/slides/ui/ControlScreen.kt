@@ -55,19 +55,19 @@ fun ControlScreen(vm: SlidesViewModel) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val totalItems = 2 * NEIGHBOR_COUNT + 1
             val totalGaps = totalItems - 1
-            val usableWidth: Dp = maxWidth - (2 * OUTER_PADDING_DP).dp
-            val previewWidthFromWidth: Dp = (usableWidth - (totalGaps * GAP_DP).dp) / NEIGHBOR_COUNT
+            val usableWidth = maxWidth - (2 * OUTER_PADDING_DP).dp
+            val previewWidthFromWidth = (usableWidth - (totalGaps * GAP_DP).dp) / NEIGHBOR_COUNT
 
             val totalRowGaps = 3
             val counterTextHeight = 24f
-            val usableHeight: Dp =
+            val usableHeight =
                 maxHeight - (2 * OUTER_PADDING_DP + counterTextHeight).dp - (totalRowGaps * GAP_DP).dp
-            val previewWidthFromHeight: Dp = usableHeight / (SLIDE_ASPECT * (2 + 3))
+            val previewWidthFromHeight = usableHeight / (SLIDE_ASPECT * (2 + 3))
 
-            val previewWidth: Dp = minOf(previewWidthFromWidth, previewWidthFromHeight)
-            val previewHeight: Dp = previewWidth * SLIDE_ASPECT
-            val currentWidth: Dp = previewWidth * 3
-            val currentHeight: Dp = currentWidth * SLIDE_ASPECT
+            val previewWidth = minOf(previewWidthFromWidth, previewWidthFromHeight)
+            val previewHeight = previewWidth * SLIDE_ASPECT
+            val currentWidth = previewWidth * 3
+            val currentHeight = currentWidth * SLIDE_ASPECT
 
             val scale = previewWidth.value / PREVIEW_FONT_REF_WIDTH_DP
             val previewTitleFontSize: TextUnit = (PREVIEW_TITLE_FONT_SP * scale).sp
