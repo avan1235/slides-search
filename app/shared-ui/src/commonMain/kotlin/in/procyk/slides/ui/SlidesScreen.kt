@@ -22,6 +22,7 @@ import `in`.procyk.slides.vm.SlidesViewModel
 fun SlidesScreen(vm: SlidesViewModel) {
     val slides by vm.slides.collectAsState()
     val slideIndex by vm.slideIndex.collectAsState()
+    val showSlide by vm.showSlide.collectAsState()
     val fontScale by vm.fontScale.collectAsState()
     val currentSlide = slides.getOrNull(slideIndex)
 
@@ -30,7 +31,7 @@ fun SlidesScreen(vm: SlidesViewModel) {
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            if (currentSlide != null) {
+            if (currentSlide != null && showSlide) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()

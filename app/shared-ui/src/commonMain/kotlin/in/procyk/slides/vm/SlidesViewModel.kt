@@ -4,7 +4,9 @@ package `in`.procyk.slides.vm
 
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
-import androidx.compose.ui.input.key.KeyEventType.Companion.KeyUp
+import androidx.compose.ui.input.key.KeyEventType.Companion.KeyDown
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
@@ -18,18 +20,23 @@ import `in`.procyk.slides.vm.SearchState.Idle
 import `in`.procyk.slides.vm.SearchState.Results
 import `in`.procyk.slides.vm.SearchState.Typing
 import io.github.xxfast.kstore.KStore
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
+import kotlinx.coroutines.selects.onTimeout
+import kotlinx.coroutines.selects.select
 import kotlinx.serialization.json.Json
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -42,6 +49,7 @@ sealed class SearchState {
         SearchState()
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SlidesViewModel(
     private val searchEngine: SlideSearchEngine,
     private val store: KStore<SlidesStore>,
@@ -64,68 +72,59 @@ class SlidesViewModel(
     val searchState: StateFlow<SearchState>
         field = MutableStateFlow<SearchState>(Idle)
 
+    val showSlide: StateFlow<Boolean> =
+        searchState.map { it is Idle }.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
     private val inactivityJob = AtomicReference<Job?>(null)
 
-    private fun resetInactivityTimer() {
-        inactivityJob.exchange(viewModelScope.launch {
-            delay(10.seconds)
-            clearSearch()
-        })?.cancel()
+    init {
+        val trigger = Channel<Unit>()
+
+        viewModelScope.launch {
+            while (currentCoroutineContext().isActive) select {
+                onTimeout(5.seconds) { makeIdle() }
+                trigger.onReceiveCatching { }
+            }
+        }
+        viewModelScope.launch {
+            searchState.filter { it is Typing || it is Results }.collectLatest {
+                trigger.send(Unit)
+            }
+        }
     }
 
     fun onKeyEvent(keyEvent: KeyEvent): Boolean {
-        if (keyEvent.type != KeyUp) return false
+        if (keyEvent.type != KeyDown) return true
 
-        return when (keyEvent.key) {
-            Key.Plus, Key.Equals -> {
-                increaseFontSize()
-                true
-            }
+        when (keyEvent.key) {
+            Key.Plus, Key.Equals -> increaseFontSize()
 
-            Key.Minus -> {
-                decreaseFontSize()
-                true
-            }
+            Key.Minus -> decreaseFontSize()
 
-            Key.Escape -> {
-                clearSearch()
-                true
-            }
+            Key.Escape -> makeIdle()
 
-            Key.Enter -> {
-                navigateSearchResult(forward = !keyEvent.isShiftPressed)
-                true
-            }
+            Key.Backspace -> handleBackspace(removeAll = keyEvent.isAltPressed || keyEvent.isMetaPressed)
+
+            Key.Enter -> navigateSearchResult(forward = !keyEvent.isShiftPressed)
 
             Key.DirectionRight, Key.DirectionDown -> when (searchState.value) {
-                is Idle -> {
-                    navigateNext(); true
-                }
-
-                else -> false
+                is Idle -> navigateNext()
+                is Results, is Typing -> {}
             }
 
             Key.DirectionLeft, Key.DirectionUp -> when (searchState.value) {
-                is Idle -> {
-                    navigatePrev(); true
-                }
-
-                else -> false
-            }
-
-            Key.Backspace -> {
-                handleBackspace()
-                true
+                is Idle -> navigatePrev()
+                is Results, is Typing -> {}
             }
 
             else -> {
                 val char = keyEvent.utf16CodePoint.toChar()
                 if (keyEvent.utf16CodePoint > 0 && (char.isLetterOrDigit() || char == ' ')) {
                     appendSearchChar(char)
-                    true
-                } else false
+                }
             }
         }
+        return true
     }
 
     fun navigateTo(index: Int) {
@@ -141,22 +140,20 @@ class SlidesViewModel(
             }
             Typing(newQuery)
         }
-        resetInactivityTimer()
     }
 
-    private fun handleBackspace() {
+    private fun handleBackspace(removeAll: Boolean) {
         searchState.update { current ->
             when (current) {
-                is Typing if current.query.length > 1 -> Typing(current.query.dropLast(1))
+                is Typing if current.query.length > 1 -> Typing(query = current.query.dropLast(if (removeAll) current.query.length else 1))
 
                 is Typing -> Idle
-                is Results if current.query.length > 1 -> Typing(current.query.dropLast(1))
+                is Results if current.query.length > 1 -> Typing(query = current.query.dropLast(if (removeAll) current.query.length else 1))
 
                 is Results -> Idle
                 else -> current
             }
         }
-        resetInactivityTimer()
     }
 
     private fun navigateSearchResult(forward: Boolean) {
@@ -185,8 +182,7 @@ class SlidesViewModel(
         }
     }
 
-    private fun clearSearch() {
-        inactivityJob.exchange(null)?.cancel()
+    private fun makeIdle() {
         searchState.update { Idle }
     }
 

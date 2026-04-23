@@ -60,7 +60,7 @@ fun main(args: Array<String>) {
                 width = Dp.Unspecified,
                 height = Dp.Unspecified,
             ),
-            onKeyEvent = { vm.onKeyEvent(it) },
+            onPreviewKeyEvent = { vm.onKeyEvent(it) },
         ) {
             MenuBar {
                 Menu("File") {
@@ -109,7 +109,7 @@ fun main(args: Array<String>) {
                     if (fullscreenSlides) WindowPlacement.Fullscreen
                     else WindowPlacement.Floating,
             ),
-            onKeyEvent = { vm.onKeyEvent(it) },
+            onPreviewKeyEvent = { vm.onKeyEvent(it) },
         ) {
             SlidesScreen(vm)
         }
