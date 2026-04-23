@@ -19,45 +19,43 @@ import androidx.compose.ui.unit.sp
 import `in`.procyk.slides.vm.SlidesViewModel
 
 @Composable
-fun SlidesScreen(vm: SlidesViewModel) {
-    val slides by vm.slides.collectAsState()
-    val slideIndex by vm.slideIndex.collectAsState()
-    val showSlide by vm.showSlide.collectAsState()
-    val fontScale by vm.fontScale.collectAsState()
-    val currentSlide = slides.getOrNull(slideIndex)
+fun SlidesScreen(vm: SlidesViewModel) = SlidesSearchTheme {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        val slides by vm.slides.collectAsState()
+        val slideIndex by vm.slideIndex.collectAsState()
+        val showSlide by vm.showSlide.collectAsState()
+        val fontScale by vm.fontScale.collectAsState()
+        val currentSlide = slides.getOrNull(slideIndex)
 
-    MaterialTheme {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (currentSlide != null && showSlide) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(48.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    val title = currentSlide.title
-                    if (title != null) {
-                        Text(
-                            text = title,
-                            fontSize = 40.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
+        if (currentSlide != null && showSlide) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(48.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                val title = currentSlide.title
+                if (title != null) {
                     Text(
-                        text = currentSlide.content,
-                        fontSize = (fontScale * FONT_SIZE_SP).sp,
-                        lineHeight = (fontScale * 1.2 * FONT_SIZE_SP).sp,
+                        text = title,
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
+                Text(
+                    text = currentSlide.content,
+                    fontSize = (fontScale * FONT_SIZE_SP).sp,
+                    lineHeight = (fontScale * 1.2 * FONT_SIZE_SP).sp,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

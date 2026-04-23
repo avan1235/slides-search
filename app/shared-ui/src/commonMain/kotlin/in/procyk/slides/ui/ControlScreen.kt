@@ -51,98 +51,97 @@ private const val PREVIEW_FONT_REF_WIDTH_DP = 160
 private const val PREVIEW_TITLE_FONT_SP = 6
 
 @Composable
-fun ControlScreen(vm: SlidesViewModel) {
-    val slides by vm.slides.collectAsState()
-    val slideIndex by vm.slideIndex.collectAsState()
-    val searchState by vm.searchState.collectAsState()
+fun ControlScreen(vm: SlidesViewModel) = SlidesSearchTheme {
 
-    MaterialTheme {
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val totalItems = 2 * NEIGHBOR_COUNT + 1
-            val totalGaps = totalItems - 1
-            val usableWidth = maxWidth - (2 * OUTER_PADDING_DP).dp
-            val previewWidthFromWidth = (usableWidth - (totalGaps * GAP_DP).dp) / NEIGHBOR_COUNT
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val slides by vm.slides.collectAsState()
+        val slideIndex by vm.slideIndex.collectAsState()
+        val searchState by vm.searchState.collectAsState()
 
-            val totalRowGaps = 3
-            val counterTextHeight = 24f
-            val usableHeight =
-                maxHeight - (2 * OUTER_PADDING_DP + counterTextHeight).dp - (totalRowGaps * GAP_DP).dp
-            val previewWidthFromHeight = usableHeight / (SLIDE_ASPECT * (2 + 3))
+        val totalItems = 2 * NEIGHBOR_COUNT + 1
+        val totalGaps = totalItems - 1
+        val usableWidth = maxWidth - (2 * OUTER_PADDING_DP).dp
+        val previewWidthFromWidth = (usableWidth - (totalGaps * GAP_DP).dp) / NEIGHBOR_COUNT
 
-            val previewWidth = minOf(previewWidthFromWidth, previewWidthFromHeight)
-            val previewHeight = previewWidth * SLIDE_ASPECT
-            val currentWidth = previewWidth * 3
-            val currentHeight = currentWidth * SLIDE_ASPECT
+        val totalRowGaps = 3
+        val counterTextHeight = 24f
+        val usableHeight =
+            maxHeight - (2 * OUTER_PADDING_DP + counterTextHeight).dp - (totalRowGaps * GAP_DP).dp
+        val previewWidthFromHeight = usableHeight / (SLIDE_ASPECT * (2 + 3))
 
-            val scale = previewWidth.value / PREVIEW_FONT_REF_WIDTH_DP
-            val previewTitleFontSize: TextUnit = (PREVIEW_TITLE_FONT_SP * scale).sp
-            val currentScale = currentWidth.value / PREVIEW_FONT_REF_WIDTH_DP
-            val fontSize = (PREVIEW_TITLE_FONT_SP * currentScale).sp
-            val fontScale by vm.fontScale.collectAsState()
+        val previewWidth = minOf(previewWidthFromWidth, previewWidthFromHeight)
+        val previewHeight = previewWidth * SLIDE_ASPECT
+        val currentWidth = previewWidth * 3
+        val currentHeight = currentWidth * SLIDE_ASPECT
 
-            Column(
-                modifier = Modifier.align(Alignment.Center).wrapContentSize()
-                    .padding(OUTER_PADDING_DP.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(GAP_DP.dp),
-            ) {
-                SlideNeighborRow(
-                    slides = slides,
-                    center = slideIndex,
-                    from = slideIndex - NEIGHBOR_COUNT,
-                    until = slideIndex,
-                    currentIndex = slideIndex,
-                    previewWidth = previewWidth,
-                    previewHeight = previewHeight,
-                    gap = GAP_DP.dp,
-                    titleFontSize = previewTitleFontSize,
-                    onSlideClick = vm::navigateTo,
-                )
+        val scale = previewWidth.value / PREVIEW_FONT_REF_WIDTH_DP
+        val previewTitleFontSize: TextUnit = (PREVIEW_TITLE_FONT_SP * scale).sp
+        val currentScale = currentWidth.value / PREVIEW_FONT_REF_WIDTH_DP
+        val fontSize = (PREVIEW_TITLE_FONT_SP * currentScale).sp
+        val fontScale by vm.fontScale.collectAsState()
 
-                SlideBox(
-                    slide = slides.getOrNull(slideIndex),
-                    index = slideIndex,
-                    isCurrentSlide = true,
-                    width = currentWidth,
-                    height = currentHeight,
-                    fontSize = fontSize * fontScale,
-                    onSlideClick = vm::navigateTo,
-                )
+        Column(
+            modifier = Modifier.align(Alignment.Center).wrapContentSize()
+                .padding(OUTER_PADDING_DP.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(GAP_DP.dp),
+        ) {
+            SlideNeighborRow(
+                slides = slides,
+                center = slideIndex,
+                from = slideIndex - NEIGHBOR_COUNT,
+                until = slideIndex,
+                currentIndex = slideIndex,
+                previewWidth = previewWidth,
+                previewHeight = previewHeight,
+                gap = GAP_DP.dp,
+                titleFontSize = previewTitleFontSize,
+                onSlideClick = vm::navigateTo,
+            )
 
-                SlideNeighborRow(
-                    slides = slides,
-                    center = slideIndex,
-                    from = slideIndex + 1,
-                    until = slideIndex + 1 + NEIGHBOR_COUNT,
-                    currentIndex = slideIndex,
-                    previewWidth = previewWidth,
-                    previewHeight = previewHeight,
-                    gap = GAP_DP.dp,
-                    titleFontSize = previewTitleFontSize,
-                    onSlideClick = vm::navigateTo,
-                )
+            SlideBox(
+                slide = slides.getOrNull(slideIndex),
+                index = slideIndex,
+                isCurrentSlide = true,
+                width = currentWidth,
+                height = currentHeight,
+                fontSize = fontSize * fontScale,
+                onSlideClick = vm::navigateTo,
+            )
 
-                Text(
-                    "${slideIndex + 1} / ${slides.size}",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
+            SlideNeighborRow(
+                slides = slides,
+                center = slideIndex,
+                from = slideIndex + 1,
+                until = slideIndex + 1 + NEIGHBOR_COUNT,
+                currentIndex = slideIndex,
+                previewWidth = previewWidth,
+                previewHeight = previewHeight,
+                gap = GAP_DP.dp,
+                titleFontSize = previewTitleFontSize,
+                onSlideClick = vm::navigateTo,
+            )
 
-            when (val searchState = searchState) {
-                is SearchState.Typing -> SearchQueryOverlay(
-                    query = searchState.query,
-                    resultPosition = Typing,
-                )
+            Text(
+                "${slideIndex + 1} / ${slides.size}",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
 
-                is SearchState.Results -> SearchQueryOverlay(
-                    query = searchState.query,
-                    resultPosition = searchState.resultIndex?.let {
-                        Found(it + 1, searchState.indices.size)
-                    } ?: NoResults,
-                )
+        when (val searchState = searchState) {
+            is SearchState.Typing -> SearchQueryOverlay(
+                query = searchState.query,
+                resultPosition = Typing,
+            )
 
-                is SearchState.Idle -> {}
-            }
+            is SearchState.Results -> SearchQueryOverlay(
+                query = searchState.query,
+                resultPosition = searchState.resultIndex?.let {
+                    Found(it + 1, searchState.indices.size)
+                } ?: NoResults,
+            )
+
+            is SearchState.Idle -> {}
         }
     }
 }

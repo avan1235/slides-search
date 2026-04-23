@@ -21,7 +21,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun App() {
     val vm = koinViewModel<SlidesViewModel>()
-    MaterialTheme {
+    SlidesSearchTheme {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             if (maxWidth > maxHeight) {
                 Row(modifier = Modifier.fillMaxSize()) {
