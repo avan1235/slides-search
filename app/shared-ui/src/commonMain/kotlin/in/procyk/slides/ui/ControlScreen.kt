@@ -23,6 +23,7 @@ import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -229,42 +230,48 @@ private sealed class ResultPosition {
 }
 
 @Composable
-private fun BoxScope.SearchQueryOverlay(
+private fun SearchQueryOverlay(
     query: String,
     resultPosition: ResultPosition,
     shape: Shape = RoundedCornerShape(8.dp),
 ) {
-    TextField(
-        value = TextFieldValue(buildAnnotatedString {
-            withStyle(MaterialTheme.typography.bodyLarge.toSpanStyle()) {
-                append(query)
-            }
-        }),
-        textStyle = MaterialTheme.typography.bodyLarge,
-        onValueChange = {},
-        singleLine = true,
-        readOnly = true,
-        trailingIcon = when (resultPosition) {
-            NoResults -> "0/0"
-            is Found -> "${resultPosition.current}/${resultPosition.count}"
-            else -> null
-        }?.let {
-            {
-                Text(text = it, style = MaterialTheme.typography.bodySmall)
-            }
-        },
+    Box(
         modifier = Modifier
-            .shadow(8.dp, shape)
-            .clip(shape)
-            .align(Alignment.Center)
-            .fillMaxWidth(0.8f),
-        colors = TextFieldDefaults.colors().copy(
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent,
-            errorTextColor = MaterialTheme.colorScheme.error,
-        ),
-        isError = resultPosition == NoResults,
-        shape = shape,
-    )
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+            .fillMaxSize(),
+    ) {
+        TextField(
+            value = TextFieldValue(buildAnnotatedString {
+                withStyle(MaterialTheme.typography.bodyLarge.toSpanStyle()) {
+                    append(query)
+                }
+            }),
+            textStyle = MaterialTheme.typography.bodyLarge,
+            onValueChange = {},
+            singleLine = true,
+            readOnly = true,
+            trailingIcon = when (resultPosition) {
+                NoResults -> "0/0"
+                is Found -> "${resultPosition.current}/${resultPosition.count}"
+                else -> null
+            }?.let {
+                {
+                    Text(text = it, style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            modifier = Modifier
+                .shadow(8.dp, shape)
+                .clip(shape)
+                .align(Alignment.Center)
+                .fillMaxWidth(0.8f),
+            colors = TextFieldDefaults.colors().copy(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                errorTextColor = MaterialTheme.colorScheme.error,
+            ),
+            isError = resultPosition == NoResults,
+            shape = shape,
+        )
+    }
 }
