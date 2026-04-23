@@ -159,7 +159,7 @@ class SlidesViewModel(
     private fun navigateSearchResult(forward: Boolean) {
         when (val current = searchState.value) {
             is Typing -> {
-                val results = searchEngine.search(current.query, slides.value)
+                val results = searchEngine.search(current.query.trim(), slides.value)
                 val resultIndex = 0.takeUnless { results.isEmpty() }
                 if (resultIndex != null) {
                     slideIndex.update { results[resultIndex] }
