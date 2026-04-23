@@ -18,6 +18,8 @@ import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.index.IndexWriter
 import org.apache.lucene.index.IndexWriterConfig
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser
+import org.apache.lucene.search.BooleanClause
+import org.apache.lucene.search.BooleanQuery
 import org.apache.lucene.search.IndexSearcher
 import org.apache.lucene.store.ByteBuffersDirectory
 import java.util.regex.Pattern
@@ -54,6 +56,22 @@ class LuceneSearchEngine : SlideSearchEngine {
                     add(StoredField("index", index))
                     if (slide.title != null) add(TextField("title", slide.title, Field.Store.NO))
                     add(TextField("content", slide.content, Field.Store.NO))
+                    if (slide.title != null) {
+                        add(
+                            TextField(
+                                "title_joined",
+                                slide.title.replace("\\s+".toRegex(), ""),
+                                Field.Store.NO
+                            )
+                        )
+                    }
+                    add(
+                        TextField(
+                            "content_joined",
+                            slide.content.replace("\\s+".toRegex(), ""),
+                            Field.Store.NO
+                        )
+                    )
                 }
                 writer.addDocument(doc)
             }
@@ -63,17 +81,31 @@ class LuceneSearchEngine : SlideSearchEngine {
         val searcher = IndexSearcher(reader)
 
         return try {
+            val trimmedQuery = query.trim()
+
             val parser = MultiFieldQueryParser(
                 arrayOf("title", "content"),
                 analyzer,
             )
-            // Append ~ to each term for fuzzy matching (handles typos and approximate matches)
-            val fuzzyQuery = query.trim()
+            val fuzzyQueryStr = trimmedQuery
                 .split("\\s+".toRegex())
                 .joinToString(" ") { term -> "$term~" }
+            val fuzzyQuery = parser.parse(fuzzyQueryStr)
 
-            val luceneQuery = parser.parse(fuzzyQuery)
-            val topDocs = searcher.search(luceneQuery, slides.size)
+            val joinedParser = MultiFieldQueryParser(
+                arrayOf("title_joined", "content_joined"),
+                analyzer,
+            )
+            val joinedQueryStr = trimmedQuery.replace("\\s+".toRegex(), "")
+            val joinedFuzzyQueryStr = "$joinedQueryStr~"
+            val joinedQuery = joinedParser.parse(joinedFuzzyQueryStr)
+
+            val combinedQuery = BooleanQuery.Builder()
+                .add(fuzzyQuery, BooleanClause.Occur.SHOULD)
+                .add(joinedQuery, BooleanClause.Occur.SHOULD)
+                .build()
+
+            val topDocs = searcher.search(combinedQuery, slides.size)
 
             topDocs.scoreDocs.map { scoreDoc ->
                 val doc = searcher.storedFields().document(scoreDoc.doc)
