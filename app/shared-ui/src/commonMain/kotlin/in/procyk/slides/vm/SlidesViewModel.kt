@@ -16,7 +16,8 @@ import androidx.lifecycle.viewModelScope
 import `in`.procyk.slides.model.Presentation
 import `in`.procyk.slides.model.Slide
 import `in`.procyk.slides.search.SlideSearchEngine
-import `in`.procyk.slides.vm.SearchState.Idle
+import `in`.procyk.slides.vm.SearchState.HideSlides
+import `in`.procyk.slides.vm.SearchState.ShowSlides
 import `in`.procyk.slides.vm.SearchState.Results
 import `in`.procyk.slides.vm.SearchState.Typing
 import io.github.xxfast.kstore.KStore
@@ -43,7 +44,8 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Duration.Companion.seconds
 
 sealed class SearchState {
-    data object Idle : SearchState()
+    data object HideSlides : SearchState()
+    data object ShowSlides : SearchState()
     data class Typing(val query: String) : SearchState()
     data class Results(val query: String, val indices: List<Int>, val resultIndex: Int?) :
         SearchState()
@@ -70,10 +72,10 @@ class SlidesViewModel(
         field = MutableStateFlow(0)
 
     val searchState: StateFlow<SearchState>
-        field = MutableStateFlow<SearchState>(Idle)
+        field = MutableStateFlow<SearchState>(ShowSlides)
 
     val showSlide: StateFlow<Boolean> =
-        searchState.map { it is Idle }.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+        searchState.map { it is ShowSlides }.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     private val inactivityJob = AtomicReference<Job?>(null)
 
@@ -82,7 +84,14 @@ class SlidesViewModel(
 
         viewModelScope.launch {
             while (currentCoroutineContext().isActive) select {
-                onTimeout(5.seconds) { makeIdle() }
+                onTimeout(5.seconds) {
+                    searchState.update {
+                        when (it) {
+                            HideSlides -> HideSlides
+                            is Results, ShowSlides, is Typing -> ShowSlides
+                        }
+                    }
+                }
                 trigger.onReceiveCatching { }
             }
         }
@@ -101,20 +110,25 @@ class SlidesViewModel(
 
             Key.Minus -> decreaseFontSize()
 
-            Key.Escape -> makeIdle()
+            Key.Escape -> searchState.update {
+                when (it) {
+                    ShowSlides -> HideSlides
+                    is Results, is Typing, HideSlides -> ShowSlides
+                }
+            }
 
             Key.Backspace -> handleBackspace(removeAll = keyEvent.isAltPressed || keyEvent.isMetaPressed)
 
             Key.Enter -> navigateSearchResult(forward = !keyEvent.isShiftPressed)
 
             Key.DirectionRight, Key.DirectionDown -> when (searchState.value) {
-                is Idle -> navigateNext()
-                is Results, is Typing -> {}
+                is ShowSlides -> navigateNext()
+                is Results, is Typing, is HideSlides -> {}
             }
 
             Key.DirectionLeft, Key.DirectionUp -> when (searchState.value) {
-                is Idle -> navigatePrev()
-                is Results, is Typing -> {}
+                is ShowSlides -> navigatePrev()
+                is Results, is Typing, is HideSlides -> {}
             }
 
             else -> {
@@ -134,7 +148,8 @@ class SlidesViewModel(
     private fun appendSearchChar(char: Char) {
         searchState.update { current ->
             val newQuery = when (current) {
-                is Idle -> char.toString()
+                is HideSlides -> return@update current
+                is ShowSlides -> char.toString()
                 is Typing -> current.query + char
                 is Results -> current.query + char
             }
@@ -147,10 +162,10 @@ class SlidesViewModel(
             when (current) {
                 is Typing if current.query.length > 1 -> Typing(query = current.query.dropLast(if (removeAll) current.query.length else 1))
 
-                is Typing -> Idle
+                is Typing -> ShowSlides
                 is Results if current.query.length > 1 -> Typing(query = current.query.dropLast(if (removeAll) current.query.length else 1))
 
-                is Results -> Idle
+                is Results -> ShowSlides
                 else -> current
             }
         }
@@ -178,12 +193,9 @@ class SlidesViewModel(
                 searchState.update { current.copy(resultIndex = next) }
             }
 
-            is Idle -> {}
+            is ShowSlides -> {}
+            is HideSlides -> {}
         }
-    }
-
-    private fun makeIdle() {
-        searchState.update { Idle }
     }
 
     fun navigateNext() {
