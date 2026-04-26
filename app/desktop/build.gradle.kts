@@ -41,17 +41,17 @@ compose.desktop {
             windows {
                 menu = true
                 upgradeUuid = "2e52be3f-064e-48df-b516-0664e7678416"
-//                iconFile.set(projectDir.resolve("src/jvmMain/resources/ic_launcher.ico"))
+                iconFile.set(projectDir.resolve("src/main/resources/ic_launcher.ico"))
             }
 
             linux {
-//                iconFile.set(projectDir.resolve("src/jvmMain/resources/ic_launcher.png"))
+                iconFile.set(projectDir.resolve("src/main/resources/ic_launcher.png"))
             }
 
             macOS {
                 bundleID = "in.procyk.slides"
                 appStore = false
-//                iconFile.set(projectDir.resolve("src/jvmMain/resources/ic_launcher.icns"))
+                iconFile.set(projectDir.resolve("src/main/resources/ic_launcher.icns"))
                 signing {
                     sign.set(false)
                 }
