@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
@@ -37,7 +40,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import `in`.procyk.slides.model.Slide
-import `in`.procyk.slides.ui.ResultPosition.*
+import `in`.procyk.slides.ui.ResultPosition.Found
+import `in`.procyk.slides.ui.ResultPosition.NoResults
+import `in`.procyk.slides.ui.ResultPosition.Typing
 import `in`.procyk.slides.vm.SearchState
 import `in`.procyk.slides.vm.SlidesViewModel
 
@@ -141,7 +146,7 @@ fun ControlScreen(vm: SlidesViewModel) = SlidesSearchTheme {
             )
 
             is SearchState.ShowSlides -> {}
-            is SearchState.HideSlides -> {}
+            is SearchState.HideSlides -> HiddenSlidesOverlay()
         }
     }
 }
@@ -229,50 +234,73 @@ private sealed class ResultPosition {
 }
 
 @Composable
+private fun HiddenSlidesOverlay(
+    shape: Shape = RoundedCornerShape(8.dp),
+) = Overlay {
+    Text(
+        text = buildAnnotatedString {
+            withStyle(MaterialTheme.typography.titleLarge.toSpanStyle()) {
+                append("Paused")
+            }
+        },
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier
+            .shadow(16.dp)
+            .background(MaterialTheme.colorScheme.background, shape)
+            .padding(16.dp)
+            .align(OverlayAlignment)
+    )
+}
+
+@Composable
 private fun SearchQueryOverlay(
     query: String,
     resultPosition: ResultPosition,
     shape: Shape = RoundedCornerShape(8.dp),
-) {
+) = Overlay {
+    TextField(
+        value = TextFieldValue(buildAnnotatedString {
+            withStyle(MaterialTheme.typography.bodyLarge.toSpanStyle()) {
+                append(query)
+            }
+        }),
+        textStyle = MaterialTheme.typography.bodyLarge,
+        onValueChange = {},
+        singleLine = true,
+        readOnly = true,
+        trailingIcon = when (resultPosition) {
+            NoResults -> "0/0"
+            is Found -> "${resultPosition.current}/${resultPosition.count}"
+            else -> null
+        }?.let {
+            {
+                Text(text = it, style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        modifier = Modifier
+            .shadow(8.dp, shape)
+            .clip(shape)
+            .align(OverlayAlignment)
+            .fillMaxWidth(0.8f),
+        colors = TextFieldDefaults.colors().copy(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            errorTextColor = MaterialTheme.colorScheme.error,
+        ),
+        isError = resultPosition == NoResults,
+        shape = shape,
+    )
+}
+
+@Composable
+private inline fun Overlay(content: @Composable BoxScope.() -> Unit) {
     Box(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
             .fillMaxSize(),
-    ) {
-        TextField(
-            value = TextFieldValue(buildAnnotatedString {
-                withStyle(MaterialTheme.typography.bodyLarge.toSpanStyle()) {
-                    append(query)
-                }
-            }),
-            textStyle = MaterialTheme.typography.bodyLarge,
-            onValueChange = {},
-            singleLine = true,
-            readOnly = true,
-            trailingIcon = when (resultPosition) {
-                NoResults -> "0/0"
-                is Found -> "${resultPosition.current}/${resultPosition.count}"
-                else -> null
-            }?.let {
-                {
-                    Text(text = it, style = MaterialTheme.typography.bodySmall)
-                }
-            },
-            modifier = Modifier
-                .shadow(8.dp, shape)
-                .clip(shape)
-                .align(SearchQueryAlignment)
-                .fillMaxWidth(0.8f),
-            colors = TextFieldDefaults.colors().copy(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-                errorTextColor = MaterialTheme.colorScheme.error,
-            ),
-            isError = resultPosition == NoResults,
-            shape = shape,
-        )
-    }
+        content = content,
+    )
 }
 
-private val SearchQueryAlignment = BiasAlignment(0f, -0.7f)
+private val OverlayAlignment = BiasAlignment(0f, -0.7f)

@@ -17,6 +17,7 @@ import `in`.procyk.slides.model.Presentation
 import `in`.procyk.slides.model.Slide
 import `in`.procyk.slides.search.SlideSearchEngine
 import `in`.procyk.slides.vm.SearchState.HideSlides
+import `in`.procyk.slides.vm.SearchState.InputSearchState
 import `in`.procyk.slides.vm.SearchState.ShowSlides
 import `in`.procyk.slides.vm.SearchState.Results
 import `in`.procyk.slides.vm.SearchState.Typing
@@ -46,9 +47,22 @@ import kotlin.time.Duration.Companion.seconds
 sealed class SearchState {
     data object HideSlides : SearchState()
     data object ShowSlides : SearchState()
-    data class Typing(val query: String) : SearchState()
-    data class Results(val query: String, val indices: List<Int>, val resultIndex: Int?) :
-        SearchState()
+    sealed class InputSearchState : SearchState() {
+        abstract val query: String
+        abstract val wasHidden: Boolean
+    }
+
+    data class Typing(
+        override val query: String,
+        override val wasHidden: Boolean,
+    ) : InputSearchState()
+
+    data class Results(
+        override val query: String,
+        override val wasHidden: Boolean,
+        val indices: List<Int>,
+        val resultIndex: Int?,
+    ) : InputSearchState()
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -76,8 +90,6 @@ class SlidesViewModel(
 
     val showSlide: StateFlow<Boolean> =
         searchState.map { it is ShowSlides }.stateIn(viewModelScope, SharingStarted.Eagerly, true)
-
-    private val inactivityJob = AtomicReference<Job?>(null)
 
     init {
         val trigger = Channel<Unit>()
@@ -112,8 +124,9 @@ class SlidesViewModel(
 
             Key.Escape -> searchState.update {
                 when (it) {
-                    ShowSlides -> HideSlides
-                    is Results, is Typing, HideSlides -> ShowSlides
+                    is ShowSlides -> HideSlides
+                    is HideSlides -> ShowSlides
+                    is InputSearchState -> if (it.wasHidden) HideSlides else ShowSlides
                 }
             }
 
@@ -147,25 +160,29 @@ class SlidesViewModel(
 
     private fun appendSearchChar(char: Char) {
         searchState.update { current ->
-            val newQuery = when (current) {
-                is HideSlides -> return@update current
-                is ShowSlides -> char.toString()
-                is Typing -> current.query + char
-                is Results -> current.query + char
+            val (newQuery, wasHidden) = when (current) {
+                is HideSlides -> char.toString() to true
+                is ShowSlides -> char.toString() to false
+                is InputSearchState -> current.query + char to current.wasHidden
             }
-            Typing(newQuery)
+            Typing(newQuery, wasHidden)
         }
     }
 
     private fun handleBackspace(removeAll: Boolean) {
         searchState.update { current ->
             when (current) {
-                is Typing if current.query.length > 1 -> Typing(query = current.query.dropLast(if (removeAll) current.query.length else 1))
+                is Typing if current.query.length > 1 -> Typing(
+                    query = current.query.dropLast(if (removeAll) current.query.length else 1),
+                    wasHidden = current.wasHidden
+                )
 
-                is Typing -> ShowSlides
-                is Results if current.query.length > 1 -> Typing(query = current.query.dropLast(if (removeAll) current.query.length else 1))
+                is Results if current.query.length > 1 -> Typing(
+                    query = current.query.dropLast(if (removeAll) current.query.length else 1),
+                    wasHidden = current.wasHidden
+                )
 
-                is Results -> ShowSlides
+                is InputSearchState -> if (current.wasHidden) HideSlides else ShowSlides
                 else -> current
             }
         }
@@ -179,7 +196,14 @@ class SlidesViewModel(
                 if (resultIndex != null) {
                     slideIndex.update { results[resultIndex] }
                 }
-                searchState.update { Results(current.query, results, resultIndex) }
+                searchState.update {
+                    Results(
+                        query = current.query,
+                        wasHidden = current.wasHidden,
+                        indices = results,
+                        resultIndex = resultIndex
+                    )
+                }
             }
 
             is Results -> {
