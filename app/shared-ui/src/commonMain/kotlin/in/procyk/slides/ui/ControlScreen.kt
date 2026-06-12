@@ -3,18 +3,7 @@ package `in`.procyk.slides.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,15 +23,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.times
+import androidx.compose.ui.unit.*
 import `in`.procyk.slides.model.Slide
-import `in`.procyk.slides.ui.ResultPosition.Found
-import `in`.procyk.slides.ui.ResultPosition.NoResults
-import `in`.procyk.slides.ui.ResultPosition.Typing
+import `in`.procyk.slides.ui.ResultPosition.*
 import `in`.procyk.slides.vm.SearchState
 import `in`.procyk.slides.vm.SlidesViewModel
 
@@ -55,98 +38,101 @@ private const val PREVIEW_FONT_REF_WIDTH_DP = 160
 private const val PREVIEW_TITLE_FONT_SP = 6
 
 @Composable
-fun ControlScreen(vm: SlidesViewModel) = SlidesSearchTheme {
+fun ControlScreen(vm: SlidesViewModel) {
+    val isDarkTheme by vm.isDarkTheme.collectAsState()
+    SlidesSearchTheme(isDarkTheme = isDarkTheme) {
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val slides by vm.slides.collectAsState()
-        val slideIndex by vm.slideIndex.collectAsState()
-        val searchState by vm.searchState.collectAsState()
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val slides by vm.slides.collectAsState()
+            val slideIndex by vm.slideIndex.collectAsState()
+            val searchState by vm.searchState.collectAsState()
 
-        val totalItems = 2 * NEIGHBOR_COUNT + 1
-        val totalGaps = totalItems - 1
-        val usableWidth = maxWidth - (2 * OUTER_PADDING_DP).dp
-        val previewWidthFromWidth = (usableWidth - (totalGaps * GAP_DP).dp) / NEIGHBOR_COUNT
+            val totalItems = 2 * NEIGHBOR_COUNT + 1
+            val totalGaps = totalItems - 1
+            val usableWidth = maxWidth - (2 * OUTER_PADDING_DP).dp
+            val previewWidthFromWidth = (usableWidth - (totalGaps * GAP_DP).dp) / NEIGHBOR_COUNT
 
-        val totalRowGaps = 3
-        val counterTextHeight = 24f
-        val usableHeight =
-            maxHeight - (2 * OUTER_PADDING_DP + counterTextHeight).dp - (totalRowGaps * GAP_DP).dp
-        val previewWidthFromHeight = usableHeight / (SLIDE_ASPECT * (2 + 3))
+            val totalRowGaps = 3
+            val counterTextHeight = 24f
+            val usableHeight =
+                maxHeight - (2 * OUTER_PADDING_DP + counterTextHeight).dp - (totalRowGaps * GAP_DP).dp
+            val previewWidthFromHeight = usableHeight / (SLIDE_ASPECT * (2 + 3))
 
-        val previewWidth = minOf(previewWidthFromWidth, previewWidthFromHeight)
-        val previewHeight = previewWidth * SLIDE_ASPECT
-        val currentWidth = previewWidth * 3
-        val currentHeight = currentWidth * SLIDE_ASPECT
+            val previewWidth = minOf(previewWidthFromWidth, previewWidthFromHeight)
+            val previewHeight = previewWidth * SLIDE_ASPECT
+            val currentWidth = previewWidth * 3
+            val currentHeight = currentWidth * SLIDE_ASPECT
 
-        val scale = previewWidth.value / PREVIEW_FONT_REF_WIDTH_DP
-        val previewTitleFontSize: TextUnit = (PREVIEW_TITLE_FONT_SP * scale).sp
-        val currentScale = currentWidth.value / PREVIEW_FONT_REF_WIDTH_DP
-        val fontSize = (PREVIEW_TITLE_FONT_SP * currentScale).sp
-        val fontScale by vm.fontScale.collectAsState()
+            val scale = previewWidth.value / PREVIEW_FONT_REF_WIDTH_DP
+            val previewTitleFontSize: TextUnit = (PREVIEW_TITLE_FONT_SP * scale).sp
+            val currentScale = currentWidth.value / PREVIEW_FONT_REF_WIDTH_DP
+            val fontSize = (PREVIEW_TITLE_FONT_SP * currentScale).sp
+            val fontScale by vm.fontScale.collectAsState()
 
-        Column(
-            modifier = Modifier.align(Alignment.Center).wrapContentSize()
-                .padding(OUTER_PADDING_DP.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(GAP_DP.dp),
-        ) {
-            SlideNeighborRow(
-                slides = slides,
-                center = slideIndex,
-                from = slideIndex - NEIGHBOR_COUNT,
-                until = slideIndex,
-                currentIndex = slideIndex,
-                previewWidth = previewWidth,
-                previewHeight = previewHeight,
-                gap = GAP_DP.dp,
-                titleFontSize = previewTitleFontSize,
-                onSlideClick = vm::navigateTo,
-            )
+            Column(
+                modifier = Modifier.align(Alignment.Center).wrapContentSize()
+                    .padding(OUTER_PADDING_DP.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(GAP_DP.dp),
+            ) {
+                SlideNeighborRow(
+                    slides = slides,
+                    center = slideIndex,
+                    from = slideIndex - NEIGHBOR_COUNT,
+                    until = slideIndex,
+                    currentIndex = slideIndex,
+                    previewWidth = previewWidth,
+                    previewHeight = previewHeight,
+                    gap = GAP_DP.dp,
+                    titleFontSize = previewTitleFontSize,
+                    onSlideClick = vm::navigateTo,
+                )
 
-            SlideBox(
-                slide = slides.getOrNull(slideIndex),
-                index = slideIndex,
-                isCurrentSlide = true,
-                width = currentWidth,
-                height = currentHeight,
-                fontSize = fontSize * fontScale,
-                onSlideClick = vm::navigateTo,
-            )
+                SlideBox(
+                    slide = slides.getOrNull(slideIndex),
+                    index = slideIndex,
+                    isCurrentSlide = true,
+                    width = currentWidth,
+                    height = currentHeight,
+                    fontSize = fontSize * fontScale,
+                    onSlideClick = vm::navigateTo,
+                )
 
-            SlideNeighborRow(
-                slides = slides,
-                center = slideIndex,
-                from = slideIndex + 1,
-                until = slideIndex + 1 + NEIGHBOR_COUNT,
-                currentIndex = slideIndex,
-                previewWidth = previewWidth,
-                previewHeight = previewHeight,
-                gap = GAP_DP.dp,
-                titleFontSize = previewTitleFontSize,
-                onSlideClick = vm::navigateTo,
-            )
+                SlideNeighborRow(
+                    slides = slides,
+                    center = slideIndex,
+                    from = slideIndex + 1,
+                    until = slideIndex + 1 + NEIGHBOR_COUNT,
+                    currentIndex = slideIndex,
+                    previewWidth = previewWidth,
+                    previewHeight = previewHeight,
+                    gap = GAP_DP.dp,
+                    titleFontSize = previewTitleFontSize,
+                    onSlideClick = vm::navigateTo,
+                )
 
-            Text(
-                "${slideIndex + 1} / ${slides.size}",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
+                Text(
+                    "${slideIndex + 1} / ${slides.size}",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
 
-        when (val searchState = searchState) {
-            is SearchState.Typing -> SearchQueryOverlay(
-                query = searchState.query,
-                resultPosition = Typing,
-            )
+            when (val searchState = searchState) {
+                is SearchState.Typing -> SearchQueryOverlay(
+                    query = searchState.query,
+                    resultPosition = Typing,
+                )
 
-            is SearchState.Results -> SearchQueryOverlay(
-                query = searchState.query,
-                resultPosition = searchState.resultIndex?.let {
-                    Found(it + 1, searchState.indices.size)
-                } ?: NoResults,
-            )
+                is SearchState.Results -> SearchQueryOverlay(
+                    query = searchState.query,
+                    resultPosition = searchState.resultIndex?.let {
+                        Found(it + 1, searchState.indices.size)
+                    } ?: NoResults,
+                )
 
-            is SearchState.ShowSlides -> {}
-            is SearchState.HideSlides -> HiddenSlidesOverlay()
+                is SearchState.ShowSlides -> {}
+                is SearchState.HideSlides -> HiddenSlidesOverlay()
+            }
         }
     }
 }
@@ -206,7 +192,7 @@ private fun SlideBox(
     Box(
         modifier = Modifier.size(width, height).background(containerColor).then(
             if (isCurrentSlide) Modifier.border(2.dp, MaterialTheme.colorScheme.primary)
-            else Modifier
+            else Modifier,
         ).clickable { onSlideClick(index) }.padding(4.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -248,7 +234,7 @@ private fun HiddenSlidesOverlay(
             .shadow(16.dp)
             .background(MaterialTheme.colorScheme.background, shape)
             .padding(16.dp)
-            .align(OverlayAlignment)
+            .align(OverlayAlignment),
     )
 }
 
@@ -259,11 +245,13 @@ private fun SearchQueryOverlay(
     shape: Shape = RoundedCornerShape(8.dp),
 ) = Overlay {
     TextField(
-        value = TextFieldValue(buildAnnotatedString {
-            withStyle(MaterialTheme.typography.bodyLarge.toSpanStyle()) {
-                append(query)
-            }
-        }),
+        value = TextFieldValue(
+            buildAnnotatedString {
+                withStyle(MaterialTheme.typography.bodyLarge.toSpanStyle()) {
+                    append(query)
+                }
+            },
+        ),
         textStyle = MaterialTheme.typography.bodyLarge,
         onValueChange = {},
         singleLine = true,

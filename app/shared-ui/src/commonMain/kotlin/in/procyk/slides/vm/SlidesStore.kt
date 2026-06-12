@@ -5,5 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SlidesStore(
-    val presentation: Presentation = Presentation.EMPTY
+    val presentation: Presentation = Presentation.EMPTY,
+    val isDarkTheme: Boolean = false,
 )

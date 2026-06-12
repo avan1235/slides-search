@@ -97,6 +97,9 @@ fun main(args: Array<String>) {
                 Menu("View") {
                     Item("Increase Font Size", onClick = { vm.increaseFontSize() })
                     Item("Decrease Font Size", onClick = { vm.decreaseFontSize() })
+                    Separator()
+                    CheckboxItem("Enable Dark Mode", onCheckedChange = { vm.toggleDarkMode() }, checked = vm.isDarkTheme.value)
+
                 }
             }
             ControlScreen(vm)

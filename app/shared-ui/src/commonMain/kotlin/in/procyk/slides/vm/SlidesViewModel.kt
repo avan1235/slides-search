@@ -2,45 +2,24 @@
 
 package `in`.procyk.slides.vm
 
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.key.KeyEventType.Companion.KeyDown
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.isMetaPressed
-import androidx.compose.ui.input.key.isShiftPressed
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.type
-import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import `in`.procyk.slides.model.Presentation
 import `in`.procyk.slides.model.Slide
 import `in`.procyk.slides.search.SlideSearchEngine
-import `in`.procyk.slides.vm.SearchState.HideSlides
-import `in`.procyk.slides.vm.SearchState.InputSearchState
-import `in`.procyk.slides.vm.SearchState.ShowSlides
-import `in`.procyk.slides.vm.SearchState.Results
-import `in`.procyk.slides.vm.SearchState.Typing
+import `in`.procyk.slides.vm.SearchState.*
 import io.github.xxfast.kstore.KStore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.onTimeout
 import kotlinx.coroutines.selects.select
 import kotlinx.serialization.json.Json
-import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.Duration.Companion.seconds
 
@@ -70,6 +49,10 @@ class SlidesViewModel(
     private val searchEngine: SlideSearchEngine,
     private val store: KStore<SlidesStore>,
 ) : ViewModel() {
+
+    val isDarkTheme: StateFlow<Boolean> =
+        store.updates.map { it?.isDarkTheme ?: false }
+            .stateIn(viewModelScope, SharingStarted.Lazily, false)
 
     val fontScale: StateFlow<Float>
         field = MutableStateFlow(1f)
@@ -174,12 +157,12 @@ class SlidesViewModel(
             when (current) {
                 is Typing if current.query.length > 1 -> Typing(
                     query = current.query.dropLast(if (removeAll) current.query.length else 1),
-                    wasHidden = current.wasHidden
+                    wasHidden = current.wasHidden,
                 )
 
                 is Results if current.query.length > 1 -> Typing(
                     query = current.query.dropLast(if (removeAll) current.query.length else 1),
-                    wasHidden = current.wasHidden
+                    wasHidden = current.wasHidden,
                 )
 
                 is InputSearchState -> if (current.wasHidden) HideSlides else ShowSlides
@@ -201,7 +184,7 @@ class SlidesViewModel(
                         query = current.query,
                         wasHidden = current.wasHidden,
                         indices = results,
-                        resultIndex = resultIndex
+                        resultIndex = resultIndex,
                     )
                 }
             }
@@ -256,6 +239,12 @@ class SlidesViewModel(
     fun loadPresentation(presentation: Presentation) {
         viewModelScope.launch {
             store.update { it?.copy(presentation = presentation) }
+        }
+    }
+
+    fun toggleDarkMode() {
+        viewModelScope.launch {
+            store.update { it?.run { copy(isDarkTheme = !isDarkTheme) } }
         }
     }
 }
