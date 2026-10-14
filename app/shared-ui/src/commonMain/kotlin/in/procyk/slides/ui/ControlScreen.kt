@@ -229,6 +229,7 @@ private fun HiddenSlidesOverlay(
                 append("Paused")
             }
         },
+        color = MaterialTheme.colorScheme.onBackground,
         style = MaterialTheme.typography.titleLarge,
         modifier = Modifier
             .shadow(16.dp)
