@@ -20,7 +20,9 @@ fun SlidesScreen(vm: SlidesViewModel) {
     val isDarkTheme by vm.isDarkTheme.collectAsState()
     SlidesSearchTheme(isDarkTheme = isDarkTheme) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface)
+                .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             val slides by vm.slides.collectAsState()
@@ -32,7 +34,6 @@ fun SlidesScreen(vm: SlidesViewModel) {
             if (currentSlide != null && showSlide) {
                 Column(
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surface)
                         .fillMaxSize()
                         .padding(48.dp),
                     verticalArrangement = Arrangement.Center,
