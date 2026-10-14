@@ -2,6 +2,8 @@
 
 package `in`.procyk.slides
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.FrameWindowScope
@@ -98,7 +100,8 @@ fun main(args: Array<String>) {
                     Item("Increase Font Size", onClick = { vm.increaseFontSize() })
                     Item("Decrease Font Size", onClick = { vm.decreaseFontSize() })
                     Separator()
-                    CheckboxItem("Enable Dark Mode", onCheckedChange = { vm.toggleDarkMode() }, checked = vm.isDarkTheme.value)
+                    val isDarkTheme by vm.isDarkTheme.collectAsState()
+                    CheckboxItem("Enable Dark Mode", onCheckedChange = { vm.toggleDarkMode() }, checked = isDarkTheme)
 
                 }
             }
