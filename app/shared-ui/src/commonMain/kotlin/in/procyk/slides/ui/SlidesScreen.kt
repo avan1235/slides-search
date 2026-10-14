@@ -1,5 +1,6 @@
 package `in`.procyk.slides.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,6 +32,7 @@ fun SlidesScreen(vm: SlidesViewModel) {
             if (currentSlide != null && showSlide) {
                 Column(
                     modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surface)
                         .fillMaxSize()
                         .padding(48.dp),
                     verticalArrangement = Arrangement.Center,
@@ -52,7 +54,7 @@ fun SlidesScreen(vm: SlidesViewModel) {
                         fontSize = (fontScale * FONT_SIZE_SP).sp,
                         lineHeight = (fontScale * 1.2 * FONT_SIZE_SP).sp,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
